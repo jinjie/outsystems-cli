@@ -55,6 +55,38 @@ archives:
 checksum:
   name_template: "checksums.txt"
 
+# Publish a Homebrew cask to a personal tap repo (github.com/jinjie/homebrew-tap).
+# On each release, GoReleaser commits an updated cask pointing at the new
+# archives + checksums, so users can `brew install jinjie/tap/outsystems-cli`.
+# (GoReleaser's `brews`/formula publisher is deprecated in favor of casks.)
+homebrew_casks:
+  - name: outsystems-cli
+    repository:
+      owner: jinjie
+      name: homebrew-tap
+      branch: main
+      # Cross-repo push needs a token with write access to the tap repo; the
+      # default GITHUB_TOKEN cannot push to another repository.
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    # Directory within the tap repo to place the cask.
+    directory: Casks
+    homepage: "https://github.com/jinjie/outsystems-cli"
+    description: "CLI for the OutSystems LifeTime REST API v2"
+    license: "MIT"
+    # Commit author for the cask update in the tap repo.
+    commit_author:
+      name: goreleaserbot
+      email: goreleaserbot@users.noreply.github.com
+    commit_msg_template: "Brew cask update for {{ .ProjectName }} version {{ .Tag }}"
+    # Only publish the cask for real (non-prerelease) tags.
+    skip_upload: auto
+    # The binary is unsigned, so strip the macOS quarantine attribute on
+    # install to avoid a Gatekeeper "cannot be opened" prompt on first run.
+    hooks:
+      post:
+        install_steps: |
+          system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/outsystems-cli"]
+
 snapshot:
   # Version used for `goreleaser release --snapshot` (no tag required).
   version_template: "{{ incpatch .Version }}-next"

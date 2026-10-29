@@ -29,3 +29,7 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # PAT (or fine-grained token) with write access to the homebrew-tap
+          # repo. The default GITHUB_TOKEN cannot push to another repository.
+          # Store it as a repo secret named HOMEBREW_TAP_GITHUB_TOKEN.
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}

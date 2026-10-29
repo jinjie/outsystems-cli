@@ -25,6 +25,17 @@ specific version that matches your LifeTime version.
 
 ## Install / build
 
+### Homebrew (macOS / Linux)
+
+```sh
+brew install jinjie/tap/outsystems-cli
+```
+
+This installs from the [`jinjie/homebrew-tap`](https://github.com/jinjie/homebrew-tap)
+tap, which GoReleaser updates automatically on each release.
+
+### From source
+
 ```sh
 go build -o outsystems-cli .
 ```
