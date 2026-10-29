@@ -81,11 +81,15 @@ homebrew_casks:
     # Only publish the cask for real (non-prerelease) tags.
     skip_upload: auto
     # The binary is unsigned, so strip the macOS quarantine attribute on
-    # install to avoid a Gatekeeper "cannot be opened" prompt on first run.
+    # install to avoid a Gatekeeper "cannot be opened" prompt. Uses GoReleaser's
+    # declarative install_steps (v2.19+): {{ .StagedPath }} is a GoReleaser
+    # template var, and `run` is Homebrew's declarative step command.
     hooks:
       post:
         install_steps: |
-          system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/outsystems-cli"]
+          on_macos do
+            run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{ .StagedPath }}/outsystems-cli"]
+          end
 
 snapshot:
   # Version used for `goreleaser release --snapshot` (no tag required).
