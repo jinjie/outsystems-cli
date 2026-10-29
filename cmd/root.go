@@ -22,16 +22,46 @@ type globalFlags struct {
 
 var flags globalFlags
 
+// Build information, injected at build time via -ldflags by GoReleaser (or a
+// plain `go build`). Defaults are used for `go run` / source builds.
+var (
+	buildVersion = "dev"
+	buildCommit  = "none"
+	buildDate    = "unknown"
+)
+
+// SetVersionInfo wires the build metadata into the root command's --version
+// output. It is called from main() with values set via -ldflags.
+func SetVersionInfo(version, commit, date string) {
+	if version != "" {
+		buildVersion = version
+	}
+	if commit != "" {
+		buildCommit = commit
+	}
+	if date != "" {
+		buildDate = date
+	}
+	rootCmd.Version = buildVersion
+	rootCmd.SetVersionTemplate(
+		"outsystems-cli {{.Version}} (commit " + buildCommit + ", built " + buildDate + ")\n",
+	)
+}
+
 // rootCmd is the base command invoked as "outsystems-cli".
 var rootCmd = &cobra.Command{
-	Use:   "outsystems-cli",
-	Short: "CLI for the OutSystems LifeTime API v2",
+	Use:     "outsystems-cli",
+	Short:   "CLI for the OutSystems LifeTime API v2",
+	Version: buildVersion,
 	Long: `outsystems-cli interacts with the OutSystems LifeTime REST API v2.
 
 Configure a profile with 'outsystems-cli init', then run resource commands
 such as 'applications list' or 'environments list'. Output is JSON by default
 and written to stdout so it can be piped into tools like jq. Use --output to
-write the result to a file instead.`,
+write the result to a file instead.
+
+Note: the 'version' subcommand reports the remote LifeTime server version;
+use '--version' to see this CLI's own build version.`,
 	SilenceUsage:  true,
 	SilenceErrors: true,
 }

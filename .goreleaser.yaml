@@ -1,0 +1,77 @@
+# GoReleaser configuration for outsystems-cli.
+# Schema: https://goreleaser.com — run `goreleaser check` to validate.
+version: 2
+
+project_name: outsystems-cli
+
+before:
+  hooks:
+    # Keep the module tidy and ensure everything compiles before releasing.
+    - go mod tidy
+    - go test ./...
+
+builds:
+  - id: outsystems-cli
+    main: .
+    binary: outsystems-cli
+    env:
+      - CGO_ENABLED=0
+    # Inject build metadata into main.{version,commit,date}; -s -w strips the
+    # symbol table and DWARF to shrink the binary.
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    # Windows on arm64 is uncommon; drop it to keep the matrix lean.
+    ignore:
+      - goos: windows
+        goarch: arm64
+
+archives:
+  - id: outsystems-cli
+    # tar.gz everywhere, zip on Windows (friendlier for Windows users).
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+    files:
+      - README.md
+      - LICENSE*
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  # Version used for `goreleaser release --snapshot` (no tag required).
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "merge conflict"
+      - Merge pull request
+      - Merge branch
+
+release:
+  # Set to true if you want releases created as drafts for manual review.
+  draft: false
+  prerelease: auto

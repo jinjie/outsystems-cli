@@ -29,6 +29,33 @@ specific version that matches your LifeTime version.
 go build -o outsystems-cli .
 ```
 
+Check the CLI's own build version (distinct from the `version` subcommand,
+which reports the remote LifeTime server version):
+
+```sh
+./outsystems-cli --version
+```
+
+## Releases
+
+Releases are built with [GoReleaser](https://goreleaser.com) and published by
+the `release` GitHub Actions workflow when a `v*` tag is pushed:
+
+```sh
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+This produces cross-platform archives (Linux, macOS, Windows for amd64/arm64),
+a `checksums.txt`, and a GitHub release with an auto-generated changelog. The
+build injects the version, commit, and date into `--version` via `-ldflags`.
+
+To test the pipeline locally without tagging or publishing:
+
+```sh
+goreleaser release --snapshot --clean
+```
+
 ## Configure a profile
 
 ```sh

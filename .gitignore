@@ -1,1 +1,7 @@
 swagger.json
+
+# GoReleaser output
+/dist/
+
+# Local build binary
+/outsystems-cli
