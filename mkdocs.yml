@@ -54,6 +54,7 @@ nav:
   - Configuration: configuration.md
   - Usage: usage.md
   - Downloading binaries: downloads.md
+  - Shell completion: completion.md
   - Command reference: commands/index.md
   - Development: development.md
   - Releases: releases.md
