@@ -131,7 +131,7 @@ Follow these so other agents do not steer away from the established style:
 3. Map query params with `addBoolQuery` / gated `q.Set`, body with `--data` +
    `readBodyInput`, path params with `url.PathEscape`.
 4. Register it in the file's `init()`.
-5. Run `go build ./...` and `go vet ./...`.
+5. Run `go build ./...`, `go vet ./...`, and `go test ./...`.
 6. Document the command in `README.md` if it introduces a new resource group or
    a notable usage pattern.
 
