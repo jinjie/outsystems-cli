@@ -5,3 +5,6 @@ swagger.json
 
 # Local build binary
 /outsystems-cli
+
+# MkDocs build output
+/site/

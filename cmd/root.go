@@ -75,6 +75,12 @@ func Execute() {
 	}
 }
 
+// RootCmd returns the root cobra command. It is exported so tooling (such as
+// the Markdown docs generator in tools/gendocs) can walk the command tree.
+func RootCmd() *cobra.Command {
+	return rootCmd
+}
+
 func init() {
 	pf := rootCmd.PersistentFlags()
 	pf.StringVar(&flags.profile, "profile", "",

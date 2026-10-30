@@ -33,7 +33,11 @@ cmd/                        Cobra command tree (one file per resource).
 internal/config/            Profile config: load/save, path, precedence.
 internal/client/            HTTP client: URL building, Bearer auth, verbs.
 internal/output/            JSON rendering to stdout or file.
-README.md                   Usage docs and command overview.
+tools/gendocs/              Generates docs/commands/ from the cobra tree.
+docs/                       MkDocs Material site (GitHub Pages). Hand-written
+                            pages + generated commands/ reference.
+mkdocs.yml                  Docs site config (nav, theme).
+README.md                   Short landing page linking to the docs site.
 ```
 
 ## Configuration
@@ -132,8 +136,38 @@ Follow these so other agents do not steer away from the established style:
    `readBodyInput`, path params with `url.PathEscape`.
 4. Register it in the file's `init()`.
 5. Run `go build ./...`, `go vet ./...`, and `go test ./...`.
-6. Document the command in `README.md` if it introduces a new resource group or
-   a notable usage pattern.
+6. Regenerate the command reference with `go run ./tools/gendocs` (writes
+   `docs/commands/`). Add a content page under `docs/` only if the command
+   introduces a new concept worth a narrative, not for every command.
+
+## Syncing with the LifeTime API (swagger.json)
+
+The command tree is written by hand from the LifeTime v2 OpenAPI spec. The spec
+file (`swagger.json`) is **git-ignored** and not committed, so a working copy
+can live in the repo root during development without being committed.
+
+When asked to update the CLI against a new LifeTime version:
+
+1. Expect `swagger.json` in the **repo root** (the user drops it there).
+2. Diff it against the implemented commands: for each path + method in the
+   spec, confirm there is a matching subcommand; note added, removed, or
+   changed endpoints (new params, new bodies, changed paths).
+3. Add or update commands following the conventions above — one file per
+   resource, `--data` for bodies, gated query params, `url.PathEscape` for path
+   params, trailing slash matching the spec exactly.
+4. Verify with `go build ./...`, `go vet ./...`, `go test ./...`.
+5. Regenerate docs with `go run ./tools/gendocs`.
+
+## Documentation
+
+- The public docs site is built with MkDocs Material from `docs/` and deployed
+  to GitHub Pages by `.github/workflows/docs.yml` on push to `main`.
+- `README.md` is a short landing page that links to the site; do not grow it
+  back into full docs. Narrative docs belong under `docs/`.
+- `docs/commands/` is **generated** by `go run ./tools/gendocs` (cobra
+  `GenMarkdownTree`). Never hand-edit those files; change the command
+  definitions in `cmd/` and regenerate.
+- The root command is exposed to tooling via `cmd.RootCmd()`.
 
 ## Status
 

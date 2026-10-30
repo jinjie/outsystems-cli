@@ -1,0 +1,34 @@
+name: command-docs
+
+# Keeps the generated command reference (docs/commands/) in sync with the CLI.
+# On pull requests that touch the commands or the generator, regenerate the
+# reference and fail if the committed pages are stale, so contributors
+# regenerate (go run ./tools/gendocs) before merging.
+
+on:
+  pull_request:
+    paths:
+      - "cmd/**"
+      - "tools/gendocs/**"
+      - "docs/commands/**"
+      - ".github/workflows/command-docs.yml"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: Regenerate command reference
+        run: go run ./tools/gendocs
+      - name: Fail if the generated docs are stale
+        run: |
+          if ! git diff --quiet -- docs/commands; then
+            echo "::error::docs/commands is out of date. Run 'go run ./tools/gendocs' and commit the result."
+            git diff --stat -- docs/commands
+            exit 1
+          fi
+          echo "Command reference is up to date."

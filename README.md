@@ -1,11 +1,18 @@
 # OutSystems LifeTime v2 CLI
 
+[![Docs](https://img.shields.io/badge/docs-online-blue)](https://jinjie.github.io/outsystems-cli/)
+[![Docs build](https://github.com/jinjie/outsystems-cli/actions/workflows/docs.yml/badge.svg)](https://github.com/jinjie/outsystems-cli/actions/workflows/docs.yml)
+[![Release](https://img.shields.io/github/v/release/jinjie/outsystems-cli?sort=semver)](https://github.com/jinjie/outsystems-cli/releases/latest)
+[![Release build](https://github.com/jinjie/outsystems-cli/actions/workflows/release.yml/badge.svg)](https://github.com/jinjie/outsystems-cli/actions/workflows/release.yml)
+
 A command-line interface for the **OutSystems LifeTime REST API v2**, written
 in Go with [cobra](https://github.com/spf13/cobra). Output is JSON by default
 and written to stdout so it pipes cleanly into tools like `jq`.
 
+📖 **Full documentation: <https://jinjie.github.io/outsystems-cli/>**
+
 > Working on this project? Read [AGENTS.md](./AGENTS.md) for the coding
-> conventions.
+> conventions and project context.
 
 ## Why this exists
 
@@ -23,241 +30,41 @@ It tracks the **latest LifeTime v2 API**. Upgrades may occasionally break
 compatibility with older LifeTime installs — if that happens, pin and install a
 specific version that matches your LifeTime version.
 
-## Install / build
-
-Pre-built binaries for Linux, macOS, and Windows are attached to each
-[GitHub release](https://github.com/jinjie/outsystems-cli/releases).
-
-### Homebrew (macOS / Linux)
+## Quick start
 
 ```sh
+# 1. Install (macOS/Linux via Homebrew; see the docs for other options).
 brew install jinjie/tap/outsystems-cli
+
+# 2. Configure the default profile (prompts for the API key without echo).
+outsystems-cli init --hostname lifetime.example.com
+
+# 3. Run a command — output is JSON on stdout, ready to pipe into jq.
+outsystems-cli environments list
+outsystems-cli applications list --include-env-status | jq '.[].Name'
 ```
 
-This installs from the [`jinjie/homebrew-tap`](https://github.com/jinjie/homebrew-tap)
-tap, which GoReleaser updates automatically on each release.
-
-### Linux / macOS (manual download)
-
-Download the archive for your OS/arch, extract the binary, and put it on your
-`PATH`. Replace `VERSION` with the release tag (e.g. `v0.1.0`), and pick the
-asset matching your platform:
-
-| OS | arch | asset |
-| --- | --- | --- |
-| Linux | x86_64 (amd64) | `outsystems-cli_Linux_x86_64.tar.gz` |
-| Linux | arm64 | `outsystems-cli_Linux_arm64.tar.gz` |
-| macOS | Intel (amd64) | `outsystems-cli_Darwin_x86_64.tar.gz` |
-| macOS | Apple Silicon (arm64) | `outsystems-cli_Darwin_arm64.tar.gz` |
+Explore the full command tree with `--help` at any level:
 
 ```sh
-VERSION=v0.1.0
-ASSET=outsystems-cli_Linux_x86_64.tar.gz   # change to match your platform
-BASE=https://github.com/jinjie/outsystems-cli/releases/download/$VERSION
-
-curl -fsSLO "$BASE/$ASSET"
-tar -xzf "$ASSET" outsystems-cli
-sudo mv outsystems-cli /usr/local/bin/
-outsystems-cli --version
+outsystems-cli --help
+outsystems-cli applications --help
 ```
 
-On macOS, if Gatekeeper blocks the manually downloaded binary, clear the
-quarantine flag: `xattr -dr com.apple.quarantine /usr/local/bin/outsystems-cli`.
-(The Homebrew install does this for you.)
+## Documentation
 
-### Windows
+The full docs are published at <https://jinjie.github.io/outsystems-cli/>:
 
-Download `outsystems-cli_Windows_x86_64.zip` from the release, extract
-`outsystems-cli.exe`, and place it in a folder on your `PATH` (or add its
-folder to `PATH`). For example, in PowerShell:
+- [Installation](https://jinjie.github.io/outsystems-cli/installation/) — Homebrew, manual download, `go install`, from source.
+- [Configuration](https://jinjie.github.io/outsystems-cli/configuration/) — profiles, selection precedence, global flags.
+- [Usage](https://jinjie.github.io/outsystems-cli/usage/) — request bodies, piping, worked examples.
+- [Downloading binaries](https://jinjie.github.io/outsystems-cli/downloads/) — fetching packages.
+- [Command reference](https://jinjie.github.io/outsystems-cli/commands/) — generated from the CLI.
+- [Development](https://jinjie.github.io/outsystems-cli/development/) — building, testing, extending.
+- [Releases](https://jinjie.github.io/outsystems-cli/releases/) — releases and the Homebrew tap.
 
-```powershell
-$Version = "v0.1.0"
-$Base = "https://github.com/jinjie/outsystems-cli/releases/download/$Version"
-Invoke-WebRequest "$Base/outsystems-cli_Windows_x86_64.zip" -OutFile outsystems-cli.zip
-Expand-Archive outsystems-cli.zip -DestinationPath .
-.\outsystems-cli.exe --version
-```
+The docs source lives under [`docs/`](./docs) and is built with MkDocs Material.
 
-### Verify the download (optional)
+## License
 
-Each release includes `checksums.txt`. To verify an archive:
-
-```sh
-curl -fsSLO "https://github.com/jinjie/outsystems-cli/releases/download/$VERSION/checksums.txt"
-sha256sum --ignore-missing -c checksums.txt   # macOS: shasum -a 256 --ignore-missing -c checksums.txt
-```
-
-### Go install
-
-If you have a Go toolchain:
-
-```sh
-go install github.com/jinjie/outsystems-cli@latest
-```
-
-### From source
-
-```sh
-go build -o outsystems-cli .
-```
-
-Check the CLI's own build version (distinct from the `version` subcommand,
-which reports the remote LifeTime server version):
-
-```sh
-./outsystems-cli --version
-```
-
-## Development
-
-Requires a Go toolchain (see the `go` directive in [`go.mod`](./go.mod) for the
-version). Common tasks:
-
-```sh
-go build ./...          # compile everything
-go vet ./...            # static analysis
-go test ./...           # run the unit tests
-gofmt -w cmd internal   # format
-```
-
-Project layout, the HTTP/config/output packages, coding conventions, and a
-step-by-step recipe for adding a new command live in [AGENTS.md](./AGENTS.md).
-Read it before making changes so the codebase stays consistent.
-
-### Keeping up with the LifeTime API
-
-The command tree is generated by hand from the LifeTime v2 OpenAPI spec. The
-spec itself (`swagger.json`) is **git-ignored** and not committed. To add or
-update endpoints:
-
-1. Drop the latest `swagger.json` into the **root folder** of this project.
-2. Ask your coding agent to reconcile the CLI against it. The agent will pick
-   up `swagger.json` from the root, diff it against the implemented commands,
-   and add or update any changed endpoints following the conventions in
-   `AGENTS.md` (one file per resource, `--data` for bodies, gated query params,
-   `url.PathEscape` for path params, etc.).
-3. Run `go build ./...`, `go vet ./...`, and `go test ./...` to verify.
-
-Because `swagger.json` is ignored, it is safe to leave a working copy in the
-root while developing; it will not be committed.
-
-## Releases
-
-Releases are built with [GoReleaser](https://goreleaser.com) and published by
-the `release` GitHub Actions workflow when a `v*` tag is pushed:
-
-```sh
-git tag v0.1.0
-git push origin v0.1.0
-```
-
-This produces cross-platform archives (Linux, macOS, Windows for amd64/arm64),
-a `checksums.txt`, and a GitHub release with an auto-generated changelog. The
-build injects the version, commit, and date into `--version` via `-ldflags`.
-
-To test the pipeline locally without tagging or publishing:
-
-```sh
-goreleaser release --snapshot --clean
-```
-
-## Configure a profile
-
-```sh
-# Interactive (prompts for hostname and API key; key is read without echo):
-./outsystems-cli init
-
-# Non-interactive:
-./outsystems-cli init --hostname lifetime.example.com --api-key <token>
-
-# A named profile:
-./outsystems-cli init --profile staging --hostname lt-staging.example.com --api-key <token>
-```
-
-Config is stored at `~/.outsystems-cli/config.yaml` (`%USERPROFILE%\.outsystems-cli\`
-on Windows) with `0600` permissions.
-
-## Selecting a profile
-
-Precedence: `--profile` flag → `OUTSYSTEMS_CLI_PROFILE` env var →
-`default_profile` in config → `default`.
-
-```sh
-./outsystems-cli applications list --profile staging
-OUTSYSTEMS_CLI_PROFILE=staging ./outsystems-cli applications list
-```
-
-## Global flags
-
-| Flag | Description |
-| --- | --- |
-| `--profile` | Profile to use. |
-| `--format` | Output format. Only `json` is supported for now. |
-| `--output`, `-o` | Write the payload to a file instead of stdout. |
-
-## Request bodies
-
-Write commands that take a JSON body accept `--data`:
-
-```sh
---data '{"Name":"My App"}'      # inline JSON
---data @body.json               # read from a file
---data -                        # read from stdin (pipe-friendly)
-```
-
-## Examples
-
-```sh
-./outsystems-cli version
-./outsystems-cli applications list --include-env-status | jq '.[].Name'
-./outsystems-cli environments list
-./outsystems-cli deployments create --data @deploy.json
-./outsystems-cli deployments exec <deployment-key> start
-./outsystems-cli users get <user-key> --include-teams
-
-# Download a binary: fetch the link, then stream the file.
-LINK=$(./outsystems-cli applications version-download <app-key> <ver-key> | jq -r .url)
-./outsystems-cli downloads get --url "$LINK" -o app.oap
-```
-
-## Downloading binaries
-
-The `*-download` endpoints (application/module source code, app versions,
-solutions) return a `DownloadLink` JSON object: `{"url": "...", "expires": "..."}`.
-That `url` points at the actual binary (served as `application/octet-stream`
-with a `Content-Disposition` filename). Use `downloads get` to stream it:
-
-```sh
-# From the DownloadLink url (recommended — it may be pre-signed):
-./outsystems-cli downloads get --url "<DownloadLink.url>" -o app.oap
-
-# From a bare download key, hitting /downloads/{DownloadKey}/ on the profile host:
-./outsystems-cli downloads get <download-key> -o app.oap
-
-# Pipe to stdout (e.g. into another tool):
-./outsystems-cli downloads get --url "<url>" -o - > app.oap
-```
-
-Destination precedence: `-o <file>` → `-o -` (stdout) → server-suggested
-filename in the current directory → stdout. Existing files are not overwritten
-unless `--force` is given. The Bearer token is sent only when the URL host
-matches the profile host, so pre-signed links to other hosts never receive your
-LifeTime credential.
-
----
-
-## Commands
-
-Every LifeTime v2 API endpoint is implemented. Run `--help` at any level to
-explore the command tree:
-
-```sh
-./outsystems-cli --help
-./outsystems-cli environments --help
-./outsystems-cli environments dbconnections --help
-```
-
-Resource groups: `applications`, `environments` (including
-`environments dbconnections`), `deployments`, `modules`, `roles`, `teams`,
-`users`, `downloads`, `auth`, plus `init` and `version`. 
+[MIT](./LICENSE)
